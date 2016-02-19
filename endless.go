@@ -63,12 +63,14 @@ func NewServer(addr string, handler http.Handler) *EndlessServer {
 // ListenAndServe wraps http.ListenAndServe with graceful restart/shutdown
 func ListenAndServe(addr string, handler http.Handler) error {
 	server := NewServer(addr, handler)
+	server.ErrorLog = log.New(os.Stderr, "", log.Flags())
 	return server.ListenAndServe()
 }
 
 // ListenAndServeTLS wraps http.ListenAndServeTLS with graceful restart/shutdown
 func ListenAndServeTLS(addr string, certFile string, keyFile string, handler http.Handler) error {
 	server := NewServer(addr, handler)
+	server.ErrorLog = log.New(os.Stderr, "", log.Flags())
 	return server.ListenAndServeTLS(certFile, keyFile)
 }
 
