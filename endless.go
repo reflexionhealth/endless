@@ -28,13 +28,14 @@ type EndlessServer struct {
 	http.Server
 	ShutdownTimeout time.Duration
 
-	EndlessListener  net.Listener
-	tlsListener *EndlessListener
+	EndlessListener net.Listener
+	tlsListener     *EndlessListener
 
 	ErrorLog       *log.Logger
 	BeforeStart    func()
 	BeforeRestart  func()
 	BeforeShutdown func()
+	BeforeAbort    func()
 	AfterShutdown  func(timeout bool)
 
 	signalChan chan os.Signal
@@ -185,6 +186,7 @@ func (srv *EndlessServer) awaitSignals() {
 
 	forked := false
 	exiting := false
+	aborted := false
 	for {
 		sig := <-srv.signalChan
 		switch sig {
@@ -207,9 +209,27 @@ func (srv *EndlessServer) awaitSignals() {
 					srv.BeforeShutdown()
 				}
 				srv.shutdownEventually()
+			} else if sig == syscall.SIGINT {
+				if !aborted {
+					aborted = true
+					if srv.BeforeAbort != nil {
+						srv.BeforeAbort()
+					}
+					srv.shutdownNow()
+				} else {
+					os.Exit(1) // in case SIGINT is being spammed
+				}
 			}
 		case syscall.SIGQUIT:
-			srv.shutdownNow()
+			if !aborted {
+				aborted = true
+				if srv.BeforeAbort != nil {
+					srv.BeforeAbort()
+				}
+				srv.shutdownNow()
+			} else {
+				os.Exit(1) // in case SIGQUIT is being spammed
+			}
 		}
 	}
 }
