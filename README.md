@@ -19,13 +19,15 @@ The endless default behaviour is to use the same defaults defined in `net/http`.
 These have impact on endless by potentially not letting the parent process die until all connections are handled/finished.
 
 
-### Hammer Time
+### ShutdownTimeout
 
-To deal with hanging requests on the parent after restarting endless will *hammer* the parent 60 seconds after receiving the shutdown signal from the forked child process. When hammered still running requests get terminated. This behaviour can be controlled by another exported variable:
+To deal with hanging requests on the parent, the parent server will exit the main
+loop 60 seconds after receiving the shutdown signal from the forked child process.
+Still running requests are terminated on exit. This behaviour can be controlled by another exported variable:
 
-    DefaultHammerTime time.Duration
+    DefaultShutdownTimeout time.Duration
 
-The default is 60 seconds. When set to `-1` `hammerTime()` is not invoked automatically.
+The default is 60 seconds. When set to `-1` requests will not be terminated, instead relying on the Read and Write timeouts.
 
 
 ## Usage
