@@ -1,8 +1,7 @@
 # reflexionhealth/endless
 
 Zero downtime restarts for golang HTTP and HTTPS servers.  
-A fork of [fvbock/endless](https://github.com/fvbock/endless), frankenstein'd together with
-improvements from ReflexionHealth, [goagain](https://github.com/goagain/goagain), and [caddy](https://github.com/mholt/caddy).
+A fork of [fvbock/endless](https://github.com/fvbock/endless), frankenstein'd together with ideas from [goagain](https://github.com/goagain/goagain), and [caddy](https://github.com/mholt/caddy).
 
 Link to the normal [documentation](https://godoc.org/github.com/reflexionhealth/endless)
 
