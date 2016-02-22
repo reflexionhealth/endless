@@ -36,7 +36,7 @@ type EndlessServer struct {
 	BeforeRestart  func()
 	BeforeShutdown func()
 	BeforeAbort    func()
-	AfterShutdown  func(timeout bool)
+	AfterShutdown  func(cleanExit bool)
 
 	signalChan chan os.Signal
 	waitHttp   sync.WaitGroup
@@ -166,9 +166,9 @@ func (srv *EndlessServer) serve() error {
 	}
 
 	err := srv.Server.Serve(srv.EndlessListener)
-	hitTimeout := waitTimeout(&srv.waitHttp, srv.ShutdownTimeout)
+	finished := waitTimeout(&srv.waitHttp, srv.ShutdownTimeout)
 	if srv.AfterShutdown != nil {
-		srv.AfterShutdown(hitTimeout)
+		srv.AfterShutdown(finished)
 	}
 
 	if srv.stopped {
@@ -363,7 +363,7 @@ func (c EndlessConn) Close() error {
 }
 
 // waitTimeout waits for the waitgroup for the specified max timeout.
-// Returns true if waiting timed out.
+// Returns true if waiting finishes before the timeout.
 func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	c := make(chan struct{})
 	go func() {
@@ -373,8 +373,8 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 
 	select {
 	case <-c:
-		return false // completed normally
+		return true // completed
 	case <-time.After(timeout):
-		return true // timed out
+		return false // timed out
 	}
 }
