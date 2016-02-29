@@ -290,6 +290,16 @@ func (srv *EndlessServer) forkExec() error {
 	return cmd.Start()
 }
 
+// EndlessListener is a net.Listener which can count the number of connections on it.
+// Its methods mainly wrap net.Listener to be graceful.
+type EndlessListener struct {
+	net.Listener
+	waitHttp   *sync.WaitGroup // pointer to the host's wg used for counting connections
+	stop       chan error
+	stopped    bool
+	sync.Mutex // protects the stopped flag
+}
+
 // NewEndlessListener returns a EndlessListener that wraps a listener and uses wg to count connections.
 func NewEndlessListener(l net.Listener, wg *sync.WaitGroup) *EndlessListener {
 	el := &EndlessListener{Listener: l, stop: make(chan error), waitHttp: wg}
@@ -301,16 +311,6 @@ func NewEndlessListener(l net.Listener, wg *sync.WaitGroup) *EndlessListener {
 		el.stop <- el.Listener.Close()
 	}()
 	return el
-}
-
-// EndlessListener is a net.Listener which can count the number of connections on it.
-// Its methods mainly wrap net.Listener to be graceful.
-type EndlessListener struct {
-	net.Listener
-	waitHttp   *sync.WaitGroup // pointer to the host's wg used for counting connections
-	stop       chan error
-	stopped    bool
-	sync.Mutex // protects the stopped flag
 }
 
 // Accept accepts a connection.
@@ -333,7 +333,8 @@ func (el *EndlessListener) Close() error {
 	}
 	el.Unlock()
 	el.stop <- nil
-	return <-el.stop
+	err := <-el.stop
+	return err
 }
 
 func (el *EndlessListener) File() *os.File {

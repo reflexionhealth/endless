@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/reflexionhealth/endless"
 )
 
@@ -20,8 +19,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	log.SetFlags(0)
-	mux := mux.NewRouter()
-	mux.HandleFunc("/foo", handler).Methods("GET")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handler)
 
 	pid := syscall.Getpid()
 	log.Printf("[%d] Created\n", pid)
